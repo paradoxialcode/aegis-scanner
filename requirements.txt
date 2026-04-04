@@ -1,0 +1,6 @@
+flask
+python-nmap
+requests
+beautifulsoup4
+cvss
+fpdf2

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}INIT SCAN{% endblock %}
+
+{% block content %}
+<div class="scan-page">
+
+  <!-- Terminal window -->
+  <div class="terminal-window">
+
+    <!-- Terminal titlebar -->
+    <div class="terminal-titlebar">
+      <div class="terminal-dots">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+      </div>
+      <span class="terminal-title">aegis@scanner:~$ ./launch.sh</span>
+      <span></span>
+    </div>
+
+    <!-- Terminal body -->
+    <div class="terminal-body">
+
+      <!-- ASCII art header -->
+      <pre class="ascii-art" id="ascii-art">
+  ___  ___ _____ ___ ___ 
+ / _ \| __|/ __||_ _/ __|
+| (_) | _|| (_ | | |\__ \
+ \___/|___|\___|___|___/
+      </pre>
+
+      <div class="term-line">
+        <span class="term-prompt">aegis@scanner</span><span class="term-sep">:</span><span class="term-path">~</span><span class="term-sep">$</span>
+        <span class="term-cmd" id="typewriter"></span><span class="cursor-blink">█</span>
+      </div>
+
+      <div class="term-output mt-2" id="boot-output">
+        <div class="term-out"><span class="term-ok">[  OK  ]</span> Loading vulnerability modules...</div>
+        <div class="term-out"><span class="term-ok">[  OK  ]</span> Initialising Nmap engine v7.94</div>
+        <div class="term-out"><span class="term-ok">[  OK  ]</span> Loading OWASP Top 10 signatures</div>
+        <div class="term-out"><span class="term-ok">[  OK  ]</span> CVSS v3.1 scoring engine ready</div>
+        <div class="term-out"><span class="term-warn">[ WARN ]</span> Running in safe mode — localhost targets only</div>
+        <div class="term-out mt-2"><span class="term-info">[ INFO ]</span> AEGIS ready. Enter target below.</div>
+      </div>
+
+      <div class="term-divider my-3"></div>
+
+      <!-- Scan form -->
+      <form id="scan-form" method="POST" action="/scan" onsubmit="launchScan(event)">
+        <div class="term-input-group mb-3">
+          <label class="term-label">TARGET_IP_OR_URL</label>
+          <div class="term-input-wrapper">
+            <span class="term-input-prompt">→</span>
+            <input
+              type="text"
+              name="target"
+              id="target-input"
+              class="term-input"
+              placeholder="192.168.1.1 or http://target.local"
+              required
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="term-label">SCAN_MODE</label>
+            <select class="term-select" name="scan_mode">
+              <option value="full">[ FULL ]  Nmap + OWASP Top 10</option>
+              <option value="nmap">[ NMAP ]  Port & Service Scan Only</option>
+              <option value="owasp">[ OWASP ] Web Vulnerability Scan Only</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="term-label">INTENSITY_LEVEL</label>
+            <select class="term-select" name="intensity">
+              <option value="normal">[ -T3 ]  Normal</option>
+              <option value="aggressive">[ -T4 ]  Aggressive</option>
+              <option value="stealth">[ -T1 ]  Stealth</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="term-warning mb-4">
+          <i class="fa fa-triangle-exclamation me-2"></i>
+          WARNING: Only scan systems you own or have written authorisation to test.
+          Unauthorised scanning is illegal under the Computer Fraud and Abuse Act.
+        </div>
+
+        <button type="submit" class="btn-launch" id="launch-btn">
+          <span id="btn-text">
+            <i class="fa fa-play me-2"></i>EXECUTE SCAN
+          </span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Feature grid -->
+  <div class="feature-grid mt-4">
+    <div class="feature-item">
+      <span class="feature-icon">01</span>
+      <span class="feature-label">PORT DISCOVERY</span>
+      <span class="feature-desc">Nmap TCP/UDP scanning with service & OS detection</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">02</span>
+      <span class="feature-label">OWASP TOP 10</span>
+      <span class="feature-desc">Automated web vulnerability testing against known attack vectors</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">03</span>
+      <span class="feature-label">CVSS SCORING</span>
+      <span class="feature-desc">Every finding scored 0–10 and severity-classified automatically</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">04</span>
+      <span class="feature-label">PDF REPORTS</span>
+      <span class="feature-desc">Professional one-click report generation for stakeholders</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Typewriter effect
+  const lines = ["./aegis --scan --target <IP>", "./aegis --scan --target <IP>"];
+  const finalText = "./aegis --scan --target <IP>";
+  let i = 0;
+  const el = document.getElementById("typewriter");
+  function type() {
+    if (i < finalText.length) {
+      el.textContent += finalText[i++];
+      setTimeout(type, 60 + Math.random() * 40);
+    }
+  }
+  setTimeout(type, 800);
+
+  // Boot lines appear one by one
+  const bootLines = document.querySelectorAll(".term-out");
+  bootLines.forEach((line, idx) => {
+    line.style.opacity = 0;
+    setTimeout(() => {
+      line.style.transition = "opacity 0.3s";
+      line.style.opacity = 1;
+    }, 300 + idx * 180);
+  });
+
+  // Launch scan
+  function launchScan(e) {
+    e.preventDefault();
+    const target = document.getElementById("target-input").value;
+    const btn = document.getElementById("launch-btn");
+    const btnText = document.getElementById("btn-text");
+    btn.disabled = true;
+    btnText.innerHTML = '<i class="fa fa-circle-notch fa-spin me-2"></i>INITIALISING...';
+    setTimeout(() => {
+    document.getElementById("scan-form").submit();
+    }, 900);
+  }
+</script>
+{% endblock %}

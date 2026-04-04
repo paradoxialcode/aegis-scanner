@@ -1,0 +1,62 @@
+{
+  "scan_metadata": {
+    "target": "127.0.0.1",
+    "scan_date": "2026-04-04 13:57:23",
+    "scanner_version": "1.0.0",
+    "duration_seconds": 18,
+    "total_findings": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "informational": 0,
+    "risk_score": 0.0
+  },
+  "nmap_results": {
+    "open_ports": [
+      {
+        "port": 135,
+        "protocol": "tcp",
+        "state": "open",
+        "service": "msrpc",
+        "version": "Microsoft Windows RPC",
+        "os_guess": ""
+      },
+      {
+        "port": 445,
+        "protocol": "tcp",
+        "state": "open",
+        "service": "microsoft-ds",
+        "version": "",
+        "os_guess": ""
+      },
+      {
+        "port": 5000,
+        "protocol": "tcp",
+        "state": "open",
+        "service": "http",
+        "version": "Werkzeug httpd 2.2.2",
+        "os_guess": ""
+      }
+    ],
+    "os_detection": "Microsoft Windows 10 1607 - 11 23H2",
+    "hostname": "localhost",
+    "mac_address": ""
+  },
+  "findings": [
+    {
+      "id": "FINDING-N001",
+      "source": "nmap",
+      "category": "A05 - Security Misconfiguration",
+      "name": "SMB Open",
+      "description": "Port 445/tcp is open and running microsoft-ds ().",
+      "affected_url": "127.0.0.1:445",
+      "evidence": "Nmap scan: 445/tcp open microsoft-ds ",
+      "severity": null,
+      "cvss_score": null,
+      "cvss_vector": null,
+      "remediation": "SMB port open. Patch regularly and restrict external access.",
+      "references": []
+    }
+  ]
+}

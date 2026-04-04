@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}SCANNING // {{ target }}{% endblock %}
+
+{% block content %}
+<div class="scanning-page">
+
+  <div class="scanning-container">
+
+    <!-- Header -->
+    <div class="scan-header mb-4">
+      <div class="scan-status-icon">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring pulse-ring-2"></div>
+        <i class="fa fa-crosshairs scan-icon-inner"></i>
+      </div>
+      <div class="scan-header-text">
+        <div class="scan-label">ACTIVE SCAN</div>
+        <div class="scan-target-display">{{ target }}</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-section mb-4">
+      <div class="progress-labels">
+        <span class="mono-text small" id="stage-label">Initialising...</span>
+        <span class="mono-text small accent-text" id="pct-label">0%</span>
+      </div>
+      <div class="term-progress-bar mt-1">
+        <div class="term-progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Terminal output -->
+    <div class="scan-terminal" id="scan-terminal">
+      <div class="term-out"><span class="term-info">[ INFO ]</span> Target acquired: <span class="accent-text">{{ target }}</span></div>
+    </div>
+
+    <!-- Stage indicators -->
+    <div class="stage-indicators mt-4">
+      <div class="stage-item" id="stage-nmap">
+        <div class="stage-dot"></div>
+        <span>Nmap Scan</span>
+      </div>
+      <div class="stage-connector"></div>
+      <div class="stage-item" id="stage-owasp">
+        <div class="stage-dot"></div>
+        <span>OWASP Tests</span>
+      </div>
+      <div class="stage-connector"></div>
+      <div class="stage-item" id="stage-cvss">
+        <div class="stage-dot"></div>
+        <span>CVSS Scoring</span>
+      </div>
+      <div class="stage-connector"></div>
+      <div class="stage-item" id="stage-report">
+        <div class="stage-dot"></div>
+        <span>Finalising</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const terminal   = document.getElementById("scan-terminal");
+  const progressFill = document.getElementById("progress-fill");
+  const pctLabel   = document.getElementById("pct-label");
+  const stageLabel = document.getElementById("stage-label");
+
+  let lastLogCount = 0;
+
+  const stageMap = {
+    "Nmap Scan":   "stage-nmap",
+    "OWASP Tests": "stage-owasp",
+    "CVSS Scoring":"stage-cvss",
+    "Finalising":  "stage-report"
+  };
+
+  let activeStage = null;
+
+  function setProgress(pct, label) {
+    progressFill.style.width = pct + "%";
+    pctLabel.textContent = pct + "%";
+    stageLabel.textContent = label || "Running...";
+  }
+
+  function addLine(text) {
+    const div = document.createElement("div");
+    div.className = "term-out fade-in-line";
+
+    // Colour code based on prefix
+    if (text.includes("[OK  ]") || text.includes("[DONE]")) {
+      div.innerHTML = `<span class="term-ok">${text.substring(0, 8)}</span>${text.substring(8)}`;
+    } else if (text.includes("[ERR ]")) {
+      div.innerHTML = `<span class="term-found">${text.substring(0, 8)}</span>${text.substring(8)}`;
+    } else if (text.includes("[RUN ]")) {
+      div.innerHTML = `<span class="term-run">${text.substring(0, 8)}</span>${text.substring(8)}`;
+    } else if (text.includes("[FIND]") || text.includes("[WARN]")) {
+      div.innerHTML = `<span class="term-warn">${text.substring(0, 8)}</span>${text.substring(8)}`;
+    } else {
+      div.innerHTML = `<span class="term-info">${text.substring(0, 8)}</span>${text.substring(8)}`;
+    }
+
+    terminal.appendChild(div);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function updateStages(stageName) {
+    // Activate current stage, complete previous
+    Object.entries(stageMap).forEach(([name, id]) => {
+      const el = document.getElementById(id);
+      el.classList.remove("active", "complete");
+    });
+
+    let found = false;
+    Object.entries(stageMap).forEach(([name, id]) => {
+      const el = document.getElementById(id);
+      if (name === stageName) {
+        el.classList.add("active");
+        found = true;
+      } else if (!found) {
+        el.classList.add("complete");
+      }
+    });
+  }
+
+  function pollStatus() {
+    fetch("/api/scan_status")
+      .then(res => res.json())
+      .then(data => {
+
+        // Update progress bar
+        setProgress(data.progress, data.stage);
+
+        // Update stage indicators
+        if (data.stage) updateStages(data.stage);
+
+        // Append new log lines only
+        const newLogs = data.logs.slice(lastLogCount);
+        newLogs.forEach(line => addLine(line));
+        lastLogCount = data.logs.length;
+
+        // Check if done
+        if (data.done) {
+          // Mark all stages complete
+          Object.values(stageMap).forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.remove("active");
+            el.classList.add("complete");
+          });
+
+          if (data.error) {
+            addLine(`[ERR ] Scan failed: ${data.error}`);
+          } else {
+            setTimeout(() => {
+              window.location.href = "/results";
+            }, 3000);
+          }
+          return; // Stop polling
+        }
+
+        // Keep polling every 1.5 seconds
+        setTimeout(pollStatus, 1500);
+      })
+      .catch(err => {
+        addLine(`[ERR ] Connection error: ${err}`);
+        setTimeout(pollStatus, 3000); // retry after 3s on error
+      });
+  }
+
+  // Start polling after short delay
+  setTimeout(pollStatus, 800);
+</script>
+{% endblock %}

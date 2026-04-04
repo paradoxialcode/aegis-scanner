@@ -1,0 +1,62 @@
+# ── Scan Results (contains sensitive target data) ──
+results.json
+*.json.bak
+scan_logs/
+reports/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+
+# ── Virtual Environment ──
+venv/
+env/
+.env/
+.venv/
+
+# ── Environment Variables ──
+.env
+*.env
+secrets.py
+
+# ── Flask ──
+instance/
+flask_session/
+
+# ── Nmap output files ──
+*.nmap
+*.gnmap
+*.xml
+
+# ── PDF reports ──
+*.pdf
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── VS Code ──
+.vscode/
+*.code-workspace
+
+# ── JetBrains / Antigravity ──
+.idea/
+*.iml
+
+# ── Logs ──
+*.log
+logs/
+
+# ── Temp/generated scripts ──
+_create_files.py
+_gen_base.py
+
+# ── Pytest ──
+.pytest_cache/
+htmlcov/
+.coverage
