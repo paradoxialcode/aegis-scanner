@@ -379,7 +379,7 @@ main { flex: 1; position: relative; z-index: 1; }
   height: 100%;
   background: linear-gradient(90deg, var(--accent2), var(--accent));
   border-radius: 3px;
-  transition: width 0.4s ease;
+  transition: width 1.5s ease;
   width: 0%;
   box-shadow: 0 0 8px rgba(0,255,136,0.5);
 }
@@ -907,4 +907,90 @@ main { flex: 1; position: relative; z-index: 1; }
   /* Page breaks */
   .dark-card { page-break-inside: avoid; }
   .finding-card { page-break-inside: avoid; }
+}
+
+/* ── Cheatsheet Drawer ── */
+.cheatsheet-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.cheatsheet-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.cheatsheet-drawer {
+  position: fixed;
+  top: 50%;
+  right: -320px;
+  transform: translateY(-50%);
+  width: 300px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  z-index: 999;
+  transition: right 0.3s ease;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.4);
+}
+
+.cheatsheet-drawer.open {
+  right: 0;
+}
+
+.cheatsheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+  background: rgba(0,255,136,0.05);
+}
+
+.cheatsheet-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+.cheatsheet-close:hover { color: var(--accent); }
+
+.cheatsheet-body { padding: 12px; }
+
+.cheat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.cheat-item:last-child { border-bottom: none; }
+
+.cheat-cmd {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.cheat-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: right;
 }

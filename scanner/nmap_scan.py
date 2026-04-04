@@ -16,24 +16,35 @@ def save_results(data):
         json.dump(data, f, indent=2)
 
 
-def run_nmap(target):
+def run_nmap(target, custom_flags=""):
     print(f"[NMAP] Starting scan on target: {target}")
 
     nm = nmap.PortScanner()
 
-    # Run scan: -sV = service version, -O = OS detection, -T4 = aggressive timing
+    if custom_flags:
+        arguments = custom_flags
+        print(f"[NMAP] Using custom flags: {custom_flags}")
+    else:
+        arguments = "-sV -O -T4 --top-ports 1000"
+
     try:
-        nm.scan(hosts=target, arguments="-sV -O -T4 --top-ports 1000")
+        nm.scan(hosts=target, arguments=arguments)
+
+    # Run scan: -sV = service version, -O = OS detection, -T4 = aggressive timing
     except Exception as e:
         print(f"[NMAP] Scan error: {e}")
         return
 
     # Check if target was scanned
-    if target not in nm.all_hosts():
+    hosts = nm.all_hosts()
+    if not hosts:
         print(f"[NMAP] No results for target: {target}")
         return
 
-    host = nm[target]
+    # Use resolved IP instead of hostname
+    host_key = hosts[0]
+    host = nm[host_key]
+    print(f"[NMAP] Resolved target: {host_key}")
 
     # ── Collect open ports ──
     open_ports = []
@@ -82,15 +93,31 @@ def run_nmap(target):
     # ── Add nmap-based findings ──
     # Check for outdated/risky services
     risky_ports = {
-        21:   ("FTP Open",              "A06 - Vulnerable Components", "FTP transmits data in plaintext. Disable or replace with SFTP."),
-        23:   ("Telnet Open",           "A02 - Cryptographic Failures", "Telnet transmits credentials in plaintext. Replace with SSH."),
-        3306: ("MySQL Exposed",         "A05 - Security Misconfiguration", "MySQL port accessible externally. Restrict to localhost."),
-        5432: ("PostgreSQL Exposed",    "A05 - Security Misconfiguration", "PostgreSQL port accessible externally. Restrict to localhost."),
-        27017:("MongoDB Exposed",       "A05 - Security Misconfiguration", "MongoDB port accessible externally. Enable authentication and restrict access."),
-        6379: ("Redis Exposed",         "A05 - Security Misconfiguration", "Redis port accessible externally. Enable auth and restrict access."),
-        8080: ("HTTP Alt Port Open",    "A05 - Security Misconfiguration", "Alternate HTTP port open. Ensure it is intentional and secured."),
-        445:  ("SMB Open",              "A05 - Security Misconfiguration", "SMB port open. Patch regularly and restrict external access."),
-        139:  ("NetBIOS Open",          "A05 - Security Misconfiguration", "NetBIOS open. Disable if not needed, high risk of exploitation."),
+        21:    ("FTP Open",                "A05 - Security Misconfiguration", "FTP transmits data in plaintext. Disable or replace with SFTP."),
+        22:    ("SSH Open",                "A05 - Security Misconfiguration", "Ensure SSH is hardened, uses key-based auth only, and root login is disabled."),
+        23:    ("Telnet Open",             "A02 - Cryptographic Failures",    "Telnet transmits credentials in plaintext. Replace with SSH immediately."),
+        25:    ("SMTP Open",               "A05 - Security Misconfiguration", "Ensure SMTP is not an open relay and requires authentication."),
+        53:    ("DNS Open",                "A05 - Security Misconfiguration", "Ensure DNS is not open for recursive queries from external hosts."),
+        80:    ("HTTP Open",               "A02 - Cryptographic Failures",    "Unencrypted HTTP in use. Enforce HTTPS and redirect all HTTP traffic."),
+        110:   ("POP3 Open",               "A02 - Cryptographic Failures",    "POP3 transmits credentials in plaintext. Use POP3S on port 995."),
+        135:   ("RPC Open",                "A05 - Security Misconfiguration", "Windows RPC exposed. Restrict access via firewall."),
+        139:   ("NetBIOS Open",            "A05 - Security Misconfiguration", "NetBIOS open. Disable if not needed, high risk of exploitation."),
+        143:   ("IMAP Open",               "A02 - Cryptographic Failures",    "IMAP transmits credentials in plaintext. Use IMAPS on port 993."),
+        443:   ("HTTPS Open",              "A02 - Cryptographic Failures",    "Verify SSL/TLS certificate is valid and up to date."),
+        445:   ("SMB Open",                "A05 - Security Misconfiguration", "SMB port open. Patch regularly and restrict external access."),
+        1433:  ("MSSQL Exposed",           "A05 - Security Misconfiguration", "MSSQL port accessible externally. Restrict to localhost."),
+        1521:  ("Oracle DB Exposed",       "A05 - Security Misconfiguration", "Oracle DB port accessible externally. Restrict access."),
+        3306:  ("MySQL Exposed",           "A05 - Security Misconfiguration", "MySQL port accessible externally. Restrict to localhost."),
+        3389:  ("RDP Open",                "A05 - Security Misconfiguration", "RDP exposed externally. High risk of brute force. Use VPN instead."),
+        5432:  ("PostgreSQL Exposed",      "A05 - Security Misconfiguration", "PostgreSQL port accessible externally. Restrict to localhost."),
+        5900:  ("VNC Open",                "A05 - Security Misconfiguration", "VNC exposed. Ensure strong password and restrict access via firewall."),
+        6379:  ("Redis Exposed",           "A05 - Security Misconfiguration", "Redis port accessible externally. Enable auth and restrict access."),
+        8080:  ("HTTP Alt Port Open",      "A05 - Security Misconfiguration", "Alternate HTTP port open. Ensure it is intentional and secured."),
+        8443:  ("HTTPS Alt Port Open",     "A05 - Security Misconfiguration", "Alternate HTTPS port open. Verify SSL/TLS configuration."),
+        9200:  ("Elasticsearch Exposed",   "A05 - Security Misconfiguration", "Elasticsearch exposed. Enable authentication and restrict access."),
+        27017: ("MongoDB Exposed",         "A05 - Security Misconfiguration", "MongoDB port accessible externally. Enable authentication and restrict access."),
+        31337: ("Suspicious Port Open",    "A05 - Security Misconfiguration", "Port 31337 is commonly associated with backdoors and malware."),
+        9929:  ("Ncat Open",               "A05 - Security Misconfiguration", "Ncat/Netcat port open. Often used for backdoors and tunneling."),
     }
 
     nmap_findings = []

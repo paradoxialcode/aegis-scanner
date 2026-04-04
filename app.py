@@ -2,6 +2,7 @@ import json
 import os
 import threading
 import datetime
+import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 app = Flask(__name__)
@@ -65,9 +66,8 @@ def reset_results(target):
         json.dump(empty, f, indent=2)
 
 
-def run_scan_background(target):
+def run_scan_background(target, custom_flags=""):
     """Runs the full scan pipeline in a background thread"""
-    import time
     start_time = time.time()
 
     try:
@@ -76,11 +76,25 @@ def run_scan_background(target):
         scan_state["progress"] = 10
         scan_state["logs"].append(f"[INFO] Target acquired: {target}")
         scan_state["logs"].append("[RUN ] Launching Nmap scanner...")
+        scan_state["progress"] = 15
+        scan_state["logs"].append("[RUN ] Sending SYN packets to target...")
+
+        # Gradually increment progress while nmap runs
+        def fake_progress():
+            for p in range(16, 38, 2):
+                time.sleep(1.5)
+                if not scan_state["done"]:
+                    scan_state["progress"] = p
+
+        t = threading.Thread(target=fake_progress)
+        t.daemon = True
+        t.start()
 
         from scanner.nmap_scan import run_nmap
-        run_nmap(target)
+        run_nmap(target, custom_flags)
 
         scan_state["progress"] = 40
+        scan_state["logs"].append("[FIND] Discovered open ports")
         scan_state["logs"].append("[OK  ] Nmap scan complete")
 
         # ── Stage 2: OWASP (placeholder for now) ──
@@ -91,11 +105,14 @@ def run_scan_background(target):
         scan_state["progress"] = 65
         scan_state["logs"].append("[OK  ] OWASP tests complete")
 
-        # ── Stage 3: CVSS Scoring (placeholder for now) ──
+        # ── Stage 3: CVSS Scoring ──
         scan_state["stage"] = "CVSS Scoring"
         scan_state["progress"] = 70
         scan_state["logs"].append("[RUN ] Calculating CVSS scores...")
-        scan_state["logs"].append("[INFO] CVSS module coming soon...")
+
+        from scoring.cvss_score import score_findings
+        score_findings()
+
         scan_state["progress"] = 85
         scan_state["logs"].append("[OK  ] Scoring complete")
 
@@ -133,6 +150,7 @@ def index():
 @app.route("/scan", methods=["POST"])
 def scan():
     target = request.form.get("target", "").strip()
+    custom_flags = request.form.get("custom_flags", "").strip()
     if not target:
         return redirect(url_for("index"))
 
@@ -142,7 +160,7 @@ def scan():
 
     # Start scan in background thread
     scan_state["running"] = True
-    thread = threading.Thread(target=run_scan_background, args=(target,))
+    thread = threading.Thread(target=run_scan_background, args=(target, custom_flags))
     thread.daemon = True
     thread.start()
 

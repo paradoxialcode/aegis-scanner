@@ -80,6 +80,28 @@
               <option value="stealth">[ -T1 ]  Stealth</option>
             </select>
           </div>
+
+           <div class="col-md-12">
+            <label class="term-label">CUSTOM NMAP FLAGS (OPTIONAL)</label>
+            <div class="term-input-wrapper">
+              <span class="term-input-prompt">→</span>
+              <input
+                type="text"
+                name="custom_flags"
+                id="custom-flags-input"
+                class="term-input"
+                placeholder="e.g. -v -p 1-1000 --script vuln"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Cheatsheet trigger -->
+        <div class="mb-3 text-end">
+          <button type="button" class="cheatsheet-btn" onclick="toggleCheatsheet()">
+            <i class="fa fa-terminal me-1"></i> NMAP CHEATSHEET
+          </button>
         </div>
 
         <!-- Warning -->
@@ -163,5 +185,30 @@
     document.getElementById("scan-form").submit();
     }, 900);
   }
+
+  function toggleCheatsheet() {
+    document.getElementById("cheatsheet-drawer").classList.toggle("open");
+  }
+
 </script>
+
+<!-- Nmap Cheatsheet Drawer -->
+<div class="cheatsheet-drawer" id="cheatsheet-drawer">
+  <div class="cheatsheet-header">
+    <span><i class="fa fa-terminal me-2"></i>NMAP QUICK REFERENCE</span>
+    <button onclick="toggleCheatsheet()" class="cheatsheet-close">✕</button>
+  </div>
+  <div class="cheatsheet-body">
+    <div class="cheat-item"><span class="cheat-cmd">-sV</span><span class="cheat-desc">Detect service versions</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-O</span><span class="cheat-desc">OS fingerprinting</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-T4</span><span class="cheat-desc">Aggressive timing (faster)</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-p 80,443</span><span class="cheat-desc">Scan specific ports</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-p 1-1000</span><span class="cheat-desc">Scan port range</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-sS</span><span class="cheat-desc">TCP SYN stealth scan</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-sU</span><span class="cheat-desc">UDP scan</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-A</span><span class="cheat-desc">Aggressive scan (OS + version + scripts)</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">--top-ports 100</span><span class="cheat-desc">Scan top 100 common ports</span></div>
+    <div class="cheat-item"><span class="cheat-cmd">-oN output.txt</span><span class="cheat-desc">Save results to file</span></div>
+  </div>
+</div>
 {% endblock %}
