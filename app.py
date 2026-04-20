@@ -1,12 +1,16 @@
+from datetime import datetime
 import json
 import os
 import threading
-import datetime
 import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_cors import CORS
+from flask import send_file
+
 
 app = Flask(__name__)
 app.secret_key = "aegis_secret"
+CORS(app)
 
 RESULTS_PATH = os.path.join(os.path.dirname(__file__), "results.json")
 
@@ -43,7 +47,7 @@ def reset_results(target):
     empty = {
         "scan_metadata": {
             "target": target,
-            "scan_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "scanner_version": "1.0.0",
             "duration_seconds": 0,
             "total_findings": 0,
@@ -194,6 +198,17 @@ def api_results():
         return jsonify({"error": "No results found"}), 404
     return jsonify(data)
 
+
+@app.route("/api/report/latest")
+def generate_report():
+    from output.report import generate_report as make_report
+    report_path = make_report()
+    return send_file(
+        report_path,
+        as_attachment=True,
+        download_name=f"AEGIS_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+        mimetype="application/pdf"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
