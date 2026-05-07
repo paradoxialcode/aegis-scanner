@@ -1,0 +1,78 @@
+{
+  "scan_metadata": {
+    "target": "192.168.1.100",
+    "scan_date": "2026-04-07T19:35:00Z",
+    "total_findings": 12,
+    "critical": 1,
+    "high": 2,
+    "medium": 4,
+    "low": 3,
+    "informational": 2
+  },
+  "nmap_results": {
+    "open_ports": [
+      {
+        "port": 22,
+        "protocol": "tcp",
+        "state": "open",
+        "service": "ssh"
+      },
+      {
+        "port": 80,
+        "protocol": "tcp",
+        "state": "open",
+        "service": "http"
+      },
+      {
+        "port": 443,
+        "protocol": "tcp",
+        "state": "open",
+        "service": "https"
+      },
+      {
+        "port": 3306,
+        "protocol": "tcp",
+        "state": "filtered",
+        "service": "mysql"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "VULN-001",
+      "name": "Outdated SSH Version",
+      "category": "Configuration",
+      "severity": "Medium",
+      "cvss_score": 5.3,
+      "affected_url": "192.168.1.100:22",
+      "remediation": "Update OpenSSH to the latest version."
+    },
+    {
+      "id": "VULN-002",
+      "name": "SQL Injection",
+      "category": "Web Application",
+      "severity": "Critical",
+      "cvss_score": 9.8,
+      "affected_url": "http://192.168.1.100/login.php",
+      "remediation": "Use parameterized queries."
+    },
+    {
+      "id": "VULN-003",
+      "name": "Cross-Site Scripting (XSS)",
+      "category": "Web Application",
+      "severity": "High",
+      "cvss_score": 7.5,
+      "affected_url": "http://192.168.1.100/search.php",
+      "remediation": "Sanitize user inputs and encode outputs."
+    },
+    {
+      "id": "VULN-004",
+      "name": "Missing Security Headers",
+      "category": "Web Application",
+      "severity": "Low",
+      "cvss_score": 2.5,
+      "affected_url": "http://192.168.1.100",
+      "remediation": "Add X-Frame-Options, X-XSS-Protection, etc."
+    }
+  ]
+}
