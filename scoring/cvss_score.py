@@ -159,7 +159,7 @@ def score_findings():
                 finding["severity"]    = "Medium"
                 scored += 1
 
-        print(f"[CVSS] {finding['id']} → {finding['cvss_score']} [{finding['severity']}]")
+        print(f"[CVSS] {finding['id']} -> {finding['cvss_score']} [{finding['severity']}]")
 
     # ── Update metadata counts ──
     counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Informational": 0}

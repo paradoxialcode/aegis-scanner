@@ -94,6 +94,36 @@ REMEDIATION_DETAIL = {
 }
 
 
+def clean(text):
+    """Sanitize text for Latin-1 / fpdf core fonts. Replaces common Unicode
+    characters that charmap/Latin-1 cannot encode."""
+    if text is None:
+        return "N/A"
+    text = str(text)
+    replacements = {
+        '\u2192': '->',   # →
+        '\u2190': '<-',   # ←
+        '\u2194': '<->',  # ↔
+        '\u2013': '-',    # en dash
+        '\u2014': '--',   # em dash
+        '\u2018': "'",    # left single quote
+        '\u2019': "'",    # right single quote
+        '\u201c': '"',    # left double quote
+        '\u201d': '"',    # right double quote
+        '\u2022': '-',    # bullet
+        '\u2026': '...',  # ellipsis
+        '\u00ae': '(R)',  # ®
+        '\u00a9': '(C)',  # ©
+        '\u00b0': 'deg',  # °
+        '\u00d7': 'x',    # ×
+        '\u00f7': '/',    # ÷
+    }
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+    # Final fallback: drop anything still outside Latin-1
+    return text.encode('latin-1', errors='replace').decode('latin-1')
+
+
 def generate_donut_chart(meta):
     labels = []
     sizes = []
@@ -187,7 +217,7 @@ class AEGISReport(FPDF):
         self.set_y(-12)
         self.set_font("Helvetica", "", 8)
         self.set_text_color(139, 148, 158)
-        self.cell(0, 5, f"AEGIS v1.0.0  |  B.Tech Cybersecurity - 2nd Year  |  Page {self.page_no()}", align="C")
+        self.cell(0, 5, "AEGIS v1.0.0  |  B.Tech Cybersecurity - 2nd Year  |  Page " + str(self.page_no()), align="C")
         self.set_fill_color(0, 255, 136)
         self.rect(0, 294, 210, 3, 'F')
 
@@ -198,7 +228,7 @@ class AEGISReport(FPDF):
         self.set_draw_color(48, 54, 61)
         self.rect(10, self.get_y(), 190, 8, 'F')
         self.set_xy(13, self.get_y() + 1)
-        self.cell(0, 6, title)
+        self.cell(0, 6, clean(title))
         self.ln(12)
 
     def severity_color(self, severity):
@@ -214,26 +244,25 @@ class AEGISReport(FPDF):
         self.set_text_color(13, 17, 23)
         self.set_font("Helvetica", "B", 8)
         self.set_xy(x, y)
-        self.cell(22, 5, text.upper(), align="C", fill=True)
+        self.cell(22, 5, clean(text).upper(), align="C", fill=True)
         self.set_text_color(240, 246, 252)
 
     def info_row(self, label, value):
         self.set_font("Helvetica", "B", 9)
         self.set_text_color(139, 148, 158)
-        self.cell(40, 6, label.upper())
+        self.cell(40, 6, clean(label).upper())
         self.set_font("Helvetica", "", 9)
         self.set_text_color(240, 246, 252)
-        self.cell(0, 6, str(value))
+        self.cell(0, 6, clean(value))
         self.ln(7)
 
     def labeled_field(self, label, value, label_color, value_color):
         self.set_font("Helvetica", "B", 8)
         self.set_text_color(*label_color)
-        self.cell(30, 5, label)
+        self.cell(30, 5, clean(label))
         self.set_font("Helvetica", "", 8)
         self.set_text_color(*value_color)
-        # wrap long text
-        value_str = str(value)[:90] if value else "N/A"
+        value_str = clean(value)[:90]
         self.cell(0, 5, value_str)
         self.ln(6)
 
@@ -253,7 +282,7 @@ def generate_report():
     pdf.set_fill_color(13, 17, 23)
     pdf.rect(0, 0, 210, 297, 'F')
 
-    # ── 1. Executive Summary ──
+    # -- 1. Executive Summary --
     pdf.section_title("1. EXECUTIVE SUMMARY")
     pdf.info_row("Target",    meta.get("target", "N/A"))
     pdf.info_row("Scan Date", meta.get("scan_date", "N/A"))
@@ -279,10 +308,9 @@ def generate_report():
     pdf.cell(0, 5, "/ 10.0  OVERALL RISK SCORE")
     pdf.ln(28)
 
-    # ── 2. Findings Breakdown + Donut Chart ──
+    # -- 2. Findings Breakdown + Donut Chart --
     pdf.section_title("2. FINDINGS BREAKDOWN")
 
-    # Stat boxes
     counts = [
         ("TOTAL",         meta.get("total_findings", 0),  (240, 246, 252)),
         ("CRITICAL",      meta.get("critical", 0),         (255, 76, 76)),
@@ -317,7 +345,7 @@ def generate_report():
     pdf.image(chart_buf, x=65, y=chart_y, w=80)
     pdf.ln(88)
 
-    # ── 3. Open Ports ──
+    # -- 3. Open Ports --
     pdf.section_title("3. OPEN PORTS")
     open_ports = nmap.get("open_ports", [])
     if open_ports:
@@ -331,13 +359,13 @@ def generate_report():
             pdf.set_fill_color(22, 27, 34) if i % 2 == 0 else pdf.set_fill_color(13, 17, 23)
             pdf.set_font("Helvetica", "B", 8)
             pdf.set_text_color(0, 255, 136)
-            pdf.cell(25, 6, str(port.get("port", "")), fill=True)
+            pdf.cell(25, 6, clean(str(port.get("port", ""))), fill=True)
             pdf.set_font("Helvetica", "", 8)
             pdf.set_text_color(240, 246, 252)
-            pdf.cell(30, 6, port.get("protocol", "").upper(), fill=True)
-            pdf.cell(50, 6, port.get("service", ""), fill=True)
+            pdf.cell(30, 6, clean(port.get("protocol", "")).upper(), fill=True)
+            pdf.cell(50, 6, clean(port.get("service", "")), fill=True)
             pdf.set_text_color(139, 148, 158)
-            pdf.cell(85, 6, port.get("version", "")[:40], fill=True)
+            pdf.cell(85, 6, clean(port.get("version", ""))[:40], fill=True)
             pdf.ln(6)
     else:
         pdf.set_font("Helvetica", "", 9)
@@ -346,7 +374,7 @@ def generate_report():
         pdf.ln(8)
     pdf.ln(4)
 
-    # ── 4. Vulnerability Findings ──
+    # -- 4. Vulnerability Findings --
     pdf.section_title("4. VULNERABILITY FINDINGS")
 
     if not findings:
@@ -360,10 +388,8 @@ def generate_report():
             color = pdf.severity_color(severity)
             name = finding.get("name", "")
 
-            # Get detailed remediation steps
             remediation_steps = REMEDIATION_DETAIL.get(name, REMEDIATION_DETAIL["default"])
 
-            # Estimate card height
             card_height = 70 + (len(remediation_steps) * 6)
             if pdf.get_y() + card_height > 265:
                 pdf.add_page()
@@ -386,7 +412,7 @@ def generate_report():
             pdf.set_font("Helvetica", "", 7)
             pdf.set_text_color(139, 148, 158)
             pdf.set_xy(14, card_y + 2)
-            pdf.cell(0, 4, finding.get("id", ""))
+            pdf.cell(0, 4, clean(finding.get("id", "")))
             pdf.badge(155, card_y + 2, severity, color)
 
             cvss = finding.get("cvss_score")
@@ -399,13 +425,13 @@ def generate_report():
             pdf.set_font("Helvetica", "B", 11)
             pdf.set_text_color(240, 246, 252)
             pdf.set_xy(14, card_y + 8)
-            pdf.cell(140, 6, name[:65])
+            pdf.cell(140, 6, clean(name)[:65])
 
             # Category
             pdf.set_font("Helvetica", "", 8)
             pdf.set_text_color(139, 148, 158)
             pdf.set_xy(14, card_y + 15)
-            pdf.cell(0, 5, finding.get("category", ""))
+            pdf.cell(0, 5, clean(finding.get("category", "")))
 
             # Divider
             pdf.set_draw_color(48, 54, 61)
@@ -418,7 +444,7 @@ def generate_report():
             pdf.set_xy(14, current_y)
             pdf.labeled_field(
                 "OPEN PORT:",
-                str(finding.get("affected_url", "N/A")),
+                clean(str(finding.get("affected_url", "N/A"))),
                 (0, 255, 136),
                 (14, 165, 233)
             )
@@ -430,7 +456,7 @@ def generate_report():
                 pdf.set_xy(14, current_y)
                 pdf.labeled_field(
                     "EVIDENCE:",
-                    str(evidence)[:85],
+                    clean(str(evidence))[:85],
                     (249, 168, 37),
                     (249, 200, 100)
                 )
@@ -450,7 +476,7 @@ def generate_report():
                 pdf.set_xy(16, current_y)
                 pdf.cell(4, 5, "-")
                 pdf.set_xy(20, current_y)
-                pdf.cell(0, 5, step[:95])
+                pdf.cell(0, 5, clean(step)[:95])
                 current_y += 6
 
             pdf.ln(card_height + 6)
