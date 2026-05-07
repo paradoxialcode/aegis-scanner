@@ -164,3 +164,57 @@ if __name__ == "__main__":
     # Your target running through the VirtualBox tunnel
     target = "http://localhost:8080" 
     run_all_tests(target)
+
+def run_owasp(target):
+    import os
+    from datetime import datetime
+
+    results_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results.json")
+
+    # Run all tests
+    raw_findings = []
+    print(f"[OWASP] Starting tests on {target}")
+
+    sqli_target = f"{target}/vulnerabilities/sqli/"
+    raw_findings.append(check_sql_injection(sqli_target))
+    raw_findings.append(check_xss(target))
+    raw_findings.append(check_command_injection(target))
+    raw_findings.append(check_directory_traversal(target))
+    raw_findings.append(check_security_misconfig(target))
+    raw_findings.append(check_broken_access_control(target))
+    raw_findings.append(check_ssrf(target))
+    raw_findings.append(check_vulnerable_components(target))
+    raw_findings.append(check_authentication_failures(target))
+    raw_findings.append(check_cryptographic_failures(target))
+
+    # Convert to AEGIS schema and only include VULNERABLE findings
+    with open(results_path, "r", encoding="utf-8") as f:
+        results = json.load(f)
+
+    existing = [f for f in results["findings"] if f["source"] != "owasp"]
+    counter = 1
+
+    for raw in raw_findings:
+        if raw["status"] != "VULNERABLE":
+            continue
+        existing.append({
+            "id": f"FINDING-O{counter:03d}",
+            "source": "owasp",
+            "category": raw["vulnerability"].split("(")[1].replace(")", "") if "(" in raw["vulnerability"] else "OWASP",
+            "name": raw["vulnerability"].split("(")[0].strip(),
+            "description": raw["details"],
+            "affected_url": raw["endpoint"],
+            "evidence": raw["details"],
+            "severity": None,
+            "cvss_score": None,
+            "cvss_vector": None,
+            "remediation": "Refer to OWASP Top 10 guidelines for remediation.",
+            "references": []
+        })
+        counter += 1
+
+    results["findings"] = existing
+    with open(results_path, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2)
+
+    print(f"[OWASP] {counter - 1} vulnerabilities found and written to results.json")
