@@ -2,7 +2,7 @@
 
 AEGIS runs the whole vulnerability assessment pipeline from one place: Nmap network scanning, OWASP Top 10 (2021) web testing, CVSS v3.1 scoring and PDF report generation. A Flask backend exposes a REST API, and a Next.js dashboard shows live scan progress and results.
 
-Built as a B.Tech Cybersecurity and Digital Forensics mini project at Universal SkillTech University, Vasai (academic year 2025-26), under Prof. Dr. Mubashir Khan.
+Built as a B.Tech Cybersecurity and Digital Forensics mini project.
 
 > **Authorized use only.** AEGIS sends real scan traffic and attack-style probes (SQL injection and XSS payloads, default credential checks, SSRF vectors). Run it only against systems you own or have written permission to test. Safe legal targets are `scanme.nmap.org` (keep scans light, per the Nmap project's rules), your own `127.0.0.1`, and deliberately vulnerable labs such as DVWA or WebGoat.
 
@@ -161,7 +161,6 @@ The API has no authentication. It is meant to run on your own machine, so keep i
 | Ashish Yadav | CVSS scoring and data (`cvss_score.py`, `results.json`) |
 | Omkar Jaiswal | Dashboard and PDF report (Next.js frontend, `report.py`) |
 
-Supervisor: Prof. Dr. Mubashir Khan, Assistant Professor, Department of Cybersecurity and Digital Forensics, Universal SkillTech University.
 
 ## License
 
