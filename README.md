@@ -2,7 +2,7 @@
 
 AEGIS runs the whole vulnerability assessment pipeline from one place: Nmap network scanning, OWASP Top 10 (2021) web testing, CVSS v3.1 scoring and PDF report generation. A Flask backend exposes a REST API, and a Next.js dashboard shows live scan progress and results.
 
-Built as a B.Tech Cybersecurity and Digital Forensics mini project.
+Built as a B.Tech Cybersecurity and Digital Forensics mini project at Universal SkillTech University, Vasai (academic year 2025-26), under Prof. Dr. Mubashir Khan.
 
 > **Authorized use only.** AEGIS sends real scan traffic and attack-style probes (SQL injection and XSS payloads, default credential checks, SSRF vectors). Run it only against systems you own or have written permission to test. Safe legal targets are `scanme.nmap.org` (keep scans light, per the Nmap project's rules), your own `127.0.0.1`, and deliberately vulnerable labs such as DVWA or WebGoat.
 
@@ -22,18 +22,26 @@ Built as a B.Tech Cybersecurity and Digital Forensics mini project.
 ```text
 aegis-scanner/
 |-- aegis-backend/
-|   |-- main.py            entry point, starts Flask and Next.js
-|   |-- app.py             Flask server and API routes
-|   |-- requirements.txt   Python dependencies
-|   |-- scanner/           nmap_scan.py, owasp_tests.py
-|   |-- scoring/           cvss_score.py
-|   `-- output/            report.py (PDF generator)
-|-- aegis-frontend/        Next.js 15 dashboard (TypeScript, Tailwind CSS)
+|   |-- main.py             entry point: starts Flask and Next.js, or scans from the CLI
+|   |-- app.py              Flask server and API routes
+|   |-- requirements.txt    Python dependencies
+|   |-- scanner/            nmap_scan.py, owasp_tests.py
+|   |-- scoring/            cvss_score.py
+|   |-- output/             report.py (PDF generator)
+|   |-- templates/          Flask HTML pages (base, index, scanning, results)
+|   `-- static/             css/style.css, js/matrix.js
+|-- aegis-frontend/         Next.js 15 dashboard (TypeScript, Tailwind CSS)
+|   |-- app/                pages (home, scan, dashboard) and API routes (results, report)
+|   |-- components/         Sidebar, Header, TopCards, Charts, PortsTable, FindingsTable
+|   |-- data/               sample results.json
+|   |-- hooks/, lib/        shared helpers
+|   `-- package.json, .env.example, config files
+|-- .gitignore
 |-- LICENSE
 `-- README.md
 ```
 
-Scan results are stored in `aegis-backend/results.json`.
+Scan results are written to `aegis-backend/results.json` at run time (it is not committed).
 
 ## Requirements
 
